@@ -8,9 +8,18 @@ from audioldm.audio import wav_to_fbank, TacotronSTFT, read_wav_file
 from audioldm.latent_diffusion.ddim import DDIMSampler
 
 @st.cache_resource
-def init_img2text_model(img2text_model_path="nlpconnect/vit-gpt2-image-captioning"):
-    from transformers import pipeline
-    img2text_model = pipeline("image-to-text", model=img2text_model_path) # , tokenizer=img2text_model_path, device=0)
+def init_img2text_model(img2text_model_path,model_backend):
+    
+    if model_backend == 'huggingface':
+        from transformers import pipeline
+        img2text_model = pipeline("image-to-text", model=img2text_model_path)
+        # tokenizer=img2text_model_path
+    elif model_backend == 'modelscope':
+        from modelscope.pipelines import pipeline
+        from modelscope.utils.constant import Tasks
+        from modelscope.outputs import OutputKeys
+
+        img2text_model = pipeline(Tasks.image_captioning, model=img2text_model_path)
 
     return img2text_model
 
