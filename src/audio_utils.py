@@ -7,7 +7,9 @@ def sound_to_wav(sound,save_path=None):
     return sound_wav
 
 if __name__ == "__main__":
-    music_path=Path('./src/data/audio-to-piano/castle_in_the_sky.mp3')
+    import io
+    music_path=Path('./assets/castle_in_the_sky.mp3')
     sound = AudioSegment.from_file(music_path)
-    sound_wav=sound.export(format="wav")
-    play(AudioSegment.from_wav(sound_wav))
+    audio_wav = io.BytesIO()
+    sound.export(audio_wav,format="wav")
+    play(AudioSegment.from_wav(audio_wav))
