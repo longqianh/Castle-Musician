@@ -15,13 +15,13 @@ Castle musician is an AIGC musician project designed for high-quality music gene
 
 - AudioLDM for audio generation: `pip install audioldm`
 
-- Huggingface Transformers for image captioning: `pip install transformers`
+- Huggingface Transformers for image captioning: `pip install transformers sentencepiece open_clip_torch fairseq`
 
-- Modelscope for image captioning: `pip install opencv-python, timm, zhconv, unicodedata2, rapidfuzz, modelscope -i https://pypi.tuna.tsinghua.edu.cn/simple `
+- Modelscope for image captioning: `pip install opencv-python timm zhconv unicodedata2 rapidfuzz modelscope -i https://pypi.tuna.tsinghua.edu.cn/simple `
 
 - StreamLit for web app: `pip install streamlit`
 
-- AudioLDM env: 
+- AudioLDM cuda env: 
 ```
 pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 torchaudio==0.12.1 --extra-index-url https://download.pytorch.org/whl/cu113 -i https://pypi.tuna.tsinghua.edu.cn/simple some-package
 
@@ -30,25 +30,29 @@ pip install jupyter tqdm soundfile progressbar einops scipy librosa librosa==0.9
 
 - new image model
 ```
-pip install opencv-python timm unicodedata2 zhconv decord>=0.6.0 rapidfuzz
-
+pip install opencv-python timm unicodedata2 zhconv decord>=0.6.0 rapidfuzz			
 ```
+
+â€‹		install `eva-decord` instead of `decord ` on MacOS M1/2
 
 - audio noise reduce function
+
 ```
 pip install scipy wave noisereduce -i https://pypi.tuna.tsinghua.edu.cn/simple some-package
-
 ```
 
----
+
+
+
 
 ### DEBUG record
-- sample_rate=16000 £» 
-- transfer_strength²»Òª³¬¹ı1.0£» 
-- ÍøÒ³µÄÒôÆµ½á¹û»»»Ø¶ÁÎÄ¼şµÄ·½Ê½(Ö®Ç°µÄnumpy¸ñÊ½²»ÊÇËüĞèÒªµÄ)£» 
-- ĞÂµÄÍ¼ÏñÄ£ĞÍÊä³ö×ÖµäkeyºÍÖ®Ç°µÄÄ£ĞÍ²»Í¬£» 
-  
 
+- sample_rate=16000 ï¼› 
+- transfer_strengthä¸è¦è¶…è¿‡1.0ï¼› 
+- ç½‘é¡µçš„éŸ³é¢‘ç»“æœæ¢å›è¯»æ–‡ä»¶çš„æ–¹å¼(ä¹‹å‰çš„numpyæ ¼å¼ä¸æ˜¯å®ƒéœ€è¦çš„)ï¼› 
+- æ–°çš„å›¾åƒæ¨¡å‹è¾“å‡ºå­—å…¸keyå’Œä¹‹å‰çš„æ¨¡å‹ä¸åŒï¼› 
+  
+  
   
 
 
