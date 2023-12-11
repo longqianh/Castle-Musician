@@ -1,3 +1,6 @@
+import os
+os.environ["CUDA_LAUNCH_BLOCKING"] = ""
+
 import streamlit as st
 import torch
 import yaml
@@ -9,13 +12,13 @@ import yaml
 # from audioldm.latent_diffusion.ddim import DDIMSampler
 from audioldm2 import (
     text_to_audio,
-    style_transfer,
+    # style_transfer,
     build_model,
     save_wave,
-    get_time,
+    # get_time,
     # round_up_duration,
     # get_duration,
-    super_resolution_and_inpainting,
+    # super_resolution_and_inpainting,
 )
 
 
@@ -57,71 +60,71 @@ class AudioLdmWrapper:
         self.is_ready_ = True
         return waveform
 
-    def audio_style_transfer(
-        self,
-        text,
-        file_path,
-        transfer_strength,
-        duration,
-        guidance_scale,
-        ddim_steps,
-        save_path=None,
-    ):
-        if not self.is_ready_:
-            return False
-        self.is_ready_ = False
-        waveform = style_transfer(
-            self.model,
-            text,
-            file_path,
-            transfer_strength,
-            self.random_seed,
-            duration=duration,
-            guidance_scale=guidance_scale,
-            ddim_steps=ddim_steps,
-            batchsize=1,
-        )
-        waveform = waveform[:, None, :]
-        if save_path is not None:
-            save_wave(waveform, save_path, name="audio_styled")
-        self.is_ready_ = True
-        return waveform
+    # def audio_style_transfer(
+    #     self,
+    #     text,
+    #     file_path,
+    #     transfer_strength,
+    #     duration,
+    #     guidance_scale,
+    #     ddim_steps,
+    #     save_path=None,
+    # ):
+    #     if not self.is_ready_:
+    #         return False
+    #     self.is_ready_ = False
+    #     waveform = style_transfer(
+    #         self.model,
+    #         text,
+    #         file_path,
+    #         transfer_strength,
+    #         self.random_seed,
+    #         duration=duration,
+    #         guidance_scale=guidance_scale,
+    #         ddim_steps=ddim_steps,
+    #         batchsize=1,
+    #     )
+    #     waveform = waveform[:, None, :]
+    #     if save_path is not None:
+    #         save_wave(waveform, save_path, name="audio_styled")
+    #     self.is_ready_ = True
+    #     return waveform
 
-    def audio_super_resolution(
-        self,
-        text,
-        file_path,
-        duration,
-        guidance_scale,
-        ddim_steps,
-        n_candidate_gen_per_text,
-        time_mask_ratio_start_and_end,
-        freq_mask_ratio_start_and_end,
-        save_path=None,
-    ):
-        if not self.is_ready_:
-            return False
-        self.is_ready_ = False
-        waveform = super_resolution_and_inpainting(
-            self.model,
-            text=text,
-            original_audio_file_path=file_path,
-            seed=self.random_seed,
-            ddim_steps=ddim_steps,
-            duration=duration,
-            batchsize=1,
-            guidance_scale=guidance_scale,
-            n_candidate_gen_per_text=n_candidate_gen_per_text,
-            time_mask_ratio_start_and_end=time_mask_ratio_start_and_end,  # regenerate the 10% to 15% of the time steps in the spectrogram
-            # time_mask_ratio_start_and_end=(1.0, 1.0), # no inpainting
-            # freq_mask_ratio_start_and_end=(0.75, 1.0), # regenerate the higher 75% to 100% mel bins
-            freq_mask_ratio_start_and_end=freq_mask_ratio_start_and_end,  # no super-resolution
-            config=None,
-        )
-        if save_path is not None:
-            save_wave(waveform, save_path, name="audio_highq")
-        self.is_ready_ = True
-        return waveform
+    # def audio_super_resolution(
+    #     self,
+    #     text,
+    #     file_path,
+    #     duration,
+    #     guidance_scale,
+    #     ddim_steps,
+    #     n_candidate_gen_per_text,
+    #     time_mask_ratio_start_and_end,
+    #     freq_mask_ratio_start_and_end,
+    #     save_path=None,
+    # ):
+    #     if not self.is_ready_:
+    #         return False
+    #     self.is_ready_ = False
+    #     waveform = super_resolution_and_inpainting(
+    #         self.model,
+    #         text=text,
+    #         original_audio_file_path=file_path,
+    #         seed=self.random_seed,
+    #         ddim_steps=ddim_steps,
+    #         duration=duration,
+    #         batchsize=1,
+    #         guidance_scale=guidance_scale,
+    #         n_candidate_gen_per_text=n_candidate_gen_per_text,
+    #         time_mask_ratio_start_and_end=time_mask_ratio_start_and_end,  # regenerate the 10% to 15% of the time steps in the spectrogram
+    #         # time_mask_ratio_start_and_end=(1.0, 1.0), # no inpainting
+    #         # freq_mask_ratio_start_and_end=(0.75, 1.0), # regenerate the higher 75% to 100% mel bins
+    #         freq_mask_ratio_start_and_end=freq_mask_ratio_start_and_end,  # no super-resolution
+    #         config=None,
+    #     )
+    #     if save_path is not None:
+    #         save_wave(waveform, save_path, name="audio_highq")
+    #     self.is_ready_ = True
+    #     return waveform
 
 
 # @st.cache_resource
@@ -166,7 +169,7 @@ def predict_audio_from_text(
     guidance_scale=2.5,
     n_candidate_gen_per_text=3,
 ):
-    from audioldm.pipeline import text_to_audio
+    from audioldm2.pipeline import text_to_audio
 
     return text_to_audio(
         model,
@@ -187,9 +190,9 @@ def predict_text_from_image(img, model):
 
 if __name__ == "__main__":
     save_path = "./output/"
-    audio_model_name = "audioldm-s-full"  # "audioldm-s-full-v2"
+    audio_model_name = "audioldm-s-full-v2"  # "audioldm-s-full-v2"
     audio_model_ckpt = f"./assets/audioldm-full-s-v2.ckpt"
-    audioldm = build_model(model_name=audio_model_name)  # ckpt_path=audio_model_ckpt
+    audioldm = build_model(model_name=audio_model_name, ckpt_path=audio_model_ckpt, device='cpu')  # ckpt_path=audio_model_ckpt
 
     audio = predict_audio_from_text(
         "test",
