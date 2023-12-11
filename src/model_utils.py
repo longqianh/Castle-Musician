@@ -7,7 +7,7 @@ import yaml
 #   get_bit_depth, get_metadata, download_checkpoint, save_wave
 # from audioldm.audio import wav_to_fbank, TacotronSTFT, read_wav_file
 # from audioldm.latent_diffusion.ddim import DDIMSampler
-from audioldm import (
+from audioldm2 import (
     text_to_audio,
     style_transfer,
     build_model,
@@ -23,7 +23,7 @@ class AudioLdmWrapper:
     def __init__(self, model_name, ckpt_path, random_seed=0):
         self.random_seed = random_seed
         self.is_ready_ = False
-        self.model = build_model(ckpt_path=ckpt_path,model_name=model_name)
+        self.model = build_model(ckpt_path=ckpt_path, model_name=model_name)
         self.is_ready_ = True
         print("[GZY]: AudioLDM model init done")
 
@@ -135,6 +135,7 @@ def init_img2text_model(img2text_model_name, model_backend):
         from modelscope.pipelines import pipeline
         from modelscope.utils.constant import Tasks
         from modelscope.outputs import OutputKeys
+
         img2text_model = pipeline(Tasks.image_captioning, model=img2text_model_name)
 
     return img2text_model
@@ -186,9 +187,9 @@ def predict_text_from_image(img, model):
 
 if __name__ == "__main__":
     save_path = "./output/"
-    audio_model_name = "audioldm-l-full" #"audioldm-s-full-v2"
-    # audio_model_ckpt = f"./assets/audioldm-full-s-v2.ckpt"
-    audioldm = build_model(model_name=audio_model_name)
+    audio_model_name = "audioldm-s-full"  # "audioldm-s-full-v2"
+    audio_model_ckpt = f"./assets/audioldm-full-s-v2.ckpt"
+    audioldm = build_model(model_name=audio_model_name)  # ckpt_path=audio_model_ckpt
 
     audio = predict_audio_from_text(
         "test",

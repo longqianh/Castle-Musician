@@ -1,7 +1,7 @@
 # Castle Musician
 Castle musician is an AIGC musician project designed for high-quality music generation. The ultimate goal is to use AIGC-created music on patients with fMRI or fNIRS signal monitoring.
 
-
+![cover](src/assets/cover.png)
 
 ### Startup
 
@@ -44,16 +44,6 @@ pip install scipy wave noisereduce -i https://pypi.tuna.tsinghua.edu.cn/simple s
 
 
 
-
-### DEBUG record
-
-- sample_rate=16000 ； 
-- transfer_strength不要超过1.0； 
-- 网页的音频结果换回读文件的方式(之前的numpy格式不是它需要的)； 
-- 新的图像模型输出字典key和之前的模型不同； 
-  
-  
-  
 
 
 
