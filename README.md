@@ -1,7 +1,7 @@
 # Castle Musician
 Castle musician is an AIGC musician project designed for high-quality music generation. The ultimate goal is to use AIGC-created music on patients with fMRI or fNIRS signal monitoring.
 
-![cover](src/assets/cover.png)
+![cover](./assets/cover.png)
 
 ### Startup
 
@@ -13,7 +13,7 @@ Castle musician is an AIGC musician project designed for high-quality music gene
 
 - Pydub for audio handling: `pip install pydub` and `sudo install ffmpeg`
 
-- AudioLDM for audio generation: `pip install audioldm`
+- AudioLDM for audio generation: `pip install audioldm2`
 
 - Huggingface Transformers for image captioning: `pip install transformers sentencepiece open_clip_torch fairseq`
 
