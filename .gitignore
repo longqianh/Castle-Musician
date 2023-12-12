@@ -2,8 +2,7 @@
 .vscode/launch.json
 *.ckpt
 *.pyc
-*.pyc
-*.pyc
 src/test.py
 assets/fNIRS-Musician/量表V2.doc
 *.wav
+*.code-workspace

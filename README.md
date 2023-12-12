@@ -1,6 +1,11 @@
 # Castle Musician
 Castle musician is an AIGC musician project designed for high-quality music generation. The ultimate goal is to use AIGC-created music on patients with fMRI or fNIRS signal monitoring.
 
+Pipeline:
+
+1. OFA for image caption
+2. AudioLDM2 for caption-to-music generation
+
 ![cover](./assets/cover.png)
 
 ### Startup
