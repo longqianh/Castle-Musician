@@ -21,8 +21,16 @@ from model_utils import init_model
 
 from modelscope.pipelines import pipeline
 from modelscope.utils.constant import Tasks
-from model_utils import AudioLdmWrapper
 
+# from model_utils import AudioLdmWrapper
+from diffusers import AudioLDM2Pipeline
+
+if torch.cuda.is_available():
+    device = torch.device("cuda:0")
+elif torch.backends.mps.is_available():
+    device = torch.device("mps")
+else:
+    device = torch.device("cpu")
 
 dirname, filename = os.path.split(os.path.abspath(sys.argv[0]))
 # ===== image model 1 =====
@@ -32,11 +40,13 @@ dirname, filename = os.path.split(os.path.abspath(sys.argv[0]))
 img2text_model_name = "damo/ofa_image-caption_coco_large_en"
 img2text_model_backend = "modelscope"
 # ===== audio model =====
-audio_model_name = "audioldm-s-full-v2"
-audio_model_ckpt = f"{dirname}/assets/audioldm-full-s-v2.ckpt"
-save_path = f"{dirname}/output/"
+audio_model_name = "cvssp/audioldm2"
+# audio_model_ckpt = f"{dirname}/assets/audioldm-full-s-v2.ckpt"
+save_dir = f"{dirname}/output/"
+ori_save_name = "audio"
+sty_save_name = "audio_styled"
 
-os.makedirs(save_path, exist_ok=True)
+os.makedirs(save_dir, exist_ok=True)
 img = Image.open(f"{dirname}/assets/icon.png")
 
 
@@ -59,30 +69,27 @@ sample_rate = 16000  # 44100 samples per second
 time_mask_ratio_start_and_end = (0.10, 0.15)
 freq_mask_ratio_start_and_end = (1.0, 1.0)
 
-# image2text_model, audio_tool = init_model(
-#     img2text_model_name, img2text_model_backend, audio_model_name, audio_model_ckpt
-# )
-
-img_captioning = pipeline(
-    Tasks.image_captioning,
-    model=img2text_model_name,
-    # device=device
+image2text_model, audio_tool = init_model(
+    img_model_name=img2text_model_name,
+    img_model_end=img2text_model_backend,
+    audio_model_name=audio_model_name,
+    audio_model_precision=torch.float16,
+    device=device,
+    save_dir=save_dir,
 )
-audio_tool = AudioLdmWrapper(audio_model_name, audio_model_ckpt)
 
 musician_data = st.selectbox(
     "Data type to musician",
     ("Image", "Text", "fMRI (building...)", "fNIRS (building...)"),
 )
 
-
 guidance_scale = 4.5
-n_candidate = 3  # Generate n_candidate_gen_per_text times and select the best
+n_candidate = 1  # Generate n_candidate_gen_per_text times and select the best
 # 'musician instrument',
-
 transfer_strength = 0.55
-
 global_is_ready = False
+is_style_transfer = False
+is_reduce_noise = True
 
 if musician_data == "Image":
     with st.container():
@@ -95,7 +102,7 @@ if musician_data == "Image":
         ddim_steps_mode = st.select_slider(
             "Select inference mode", options=["fast", "medium", "slow"]
         )
-        step_mode_dict = {"fast": 100, "medium": 200, "slow": 400}
+        step_mode_dict = {"fast": 20, "medium": 100, "slow": 400}
         ddim_steps = step_mode_dict[ddim_steps_mode]
         uploaded_img = st.file_uploader(
             "Image to musician", type=["jpeg", "jpg", "png", "bmp"]
@@ -131,18 +138,21 @@ if musician_data == "Image":
                 audio_tool.is_ready_ = True
 
                 # ==== origin style ====
-                torch.cuda.empty_cache()
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                elif torch.backends.mps.is_available():
+                    torch.mps.empty_cache()
+
                 audio_imagined = audio_tool.text_to_audio(
                     img_caption,
-                    None,
                     duration=duration,
                     guidance_scale=guidance_scale,
                     ddim_steps=ddim_steps,
                     n_candidate_gen_per_text=n_candidate,
-                    save_path=save_path,
+                    save_name=ori_save_name,
                 )
                 if not isinstance(audio_imagined, bool):
-                    file_0 = get_wav_audio(save_path + "audio_0.wav")
+                    file_0 = get_wav_audio(save_dir + f"{ori_save_name}_0.wav")
                     st.audio(file_0, format="audio/wav")  # sample_rate=sample_rate
                     # st.download_button(label="Download",data=file_0,file_name='music.wav',mime='audio/wav')
                 else:
@@ -151,7 +161,11 @@ if musician_data == "Image":
                 # ==== convert style ====
                 time.sleep(1.0)
                 print("here in Confirm")
-                torch.cuda.empty_cache()
+
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                elif torch.backends.mps.is_available():
+                    torch.mps.empty_cache()
                 # audio_imagined_styled1=audio_tool.audio_style_transfer('classic violin',file_path=save_path+'audio_0.wav',\
                 #                       transfer_strength=transfer_strength,duration=duration, guidance_scale=guidance_scale,\
                 #                       ddim_steps=ddim_steps,save_path=save_path)
@@ -163,21 +177,21 @@ if musician_data == "Image":
                 #     # st.download_button(label="Download",data=file_1,file_name='music.wav',mime='audio/wav')
                 # else:
                 #     st.write('Waiting server...')
+                if is_style_transfer:
+                    audio_imagined_styled2 = audio_tool.audio_style_transfer(
+                        "piano music",
+                        file_path=save_dir + f"{ori_save_name}_0.wav",
+                        transfer_strength=transfer_strength,
+                        duration=duration,
+                        guidance_scale=guidance_scale,
+                        ddim_steps=ddim_steps,
+                        save_name=sty_save_name,
+                    )
 
-                audio_imagined_styled2 = audio_tool.audio_style_transfer(
-                    "piano music",
-                    file_path=save_path + "audio_0.wav",
-                    transfer_strength=transfer_strength,
-                    duration=duration,
-                    guidance_scale=guidance_scale,
-                    ddim_steps=ddim_steps,
-                    save_path=save_path,
-                )
-
-                if not isinstance(audio_imagined_styled2, bool):
+                elif is_reduce_noise:
                     reduce_noise(
-                        save_path + "audio_styled_0.wav",
-                        save_path + "audio_styled_0_rn.wav",
+                        save_dir + f"{sty_save_name}_0.wav",
+                        save_dir + f"{sty_save_name}_0_rn.wav",
                     )
                     file_1 = get_wav_audio(save_path + "audio_styled_0_rn.wav")
                     st.audio(file_1, format="audio/wav")  # sample_rate=sample_rate
@@ -227,20 +241,22 @@ elif musician_data == "Text":
             #     st.write(ddim_steps)
 
             # ==== origin style ====
-            save_path = save_path
-            torch.cuda.empty_cache()
+
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            elif torch.backends.mps.is_available():
+                torch.mps.empty_cache()
             print("here in Text, step1")
             audio_imagined = audio_tool.text_to_audio(
                 text,
-                None,
                 duration=duration,
                 guidance_scale=guidance_scale,
                 ddim_steps=ddim_steps,
                 n_candidate_gen_per_text=n_candidate,
-                save_path=save_path,
+                save_path=ori_save_name,
             )
             if not isinstance(audio_imagined, bool):
-                file_0 = get_wav_audio(save_path + "audio_0.wav")
+                file_0 = get_wav_audio(save_dir + f"{ori_save_name}_0.wav")
                 st.audio(file_0, format="audio/wav")  # sample_rate=sample_rate
                 # st.download_button(label="Download",data=file_0,file_name='music.wav',mime='audio/wav')
             else:
@@ -249,23 +265,27 @@ elif musician_data == "Text":
             # ==== convert style ====
             time.sleep(1.0)
             print("here in Text, step2")
-            torch.cuda.empty_cache()
-            audio_imagined_styled = audio_tool.audio_style_transfer(
-                "piano music",
-                file_path=save_path + "audio_0.wav",
-                transfer_strength=transfer_strength,
-                duration=duration,
-                guidance_scale=guidance_scale,
-                ddim_steps=ddim_steps,
-                save_path=save_path,
-            )
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            elif torch.backends.mps.is_available():
+                torch.mps.empty_cache()
 
-            if not isinstance(audio_imagined_styled, bool):
-                reduce_noise(
-                    save_path + "audio_styled_0.wav",
-                    save_path + "audio_styled_0_rn.wav",
+            if is_style_transfer:
+                audio_imagined_styled = audio_tool.audio_style_transfer(
+                    "piano music",
+                    file_path=save_dir + f"{ori_save_name}_0.wav",
+                    transfer_strength=transfer_strength,
+                    duration=duration,
+                    guidance_scale=guidance_scale,
+                    ddim_steps=ddim_steps,
+                    save_name=sty_save_name,
                 )
-                file_1 = get_wav_audio(save_path + "audio_styled_0_rn.wav")
+            elif is_reduce_noise:
+                reduce_noise(
+                    save_dir + f"{sty_save_name}_0.wav",
+                    save_dir + f"{sty_save_name}_0_rn.wav",
+                )
+                file_1 = get_wav_audio(save_dir + f"{sty_save_name}_0_rn.wav")
                 st.audio(file_1, format="audio/wav")  # sample_rate=sample_rate
                 # st.download_button(label="Download",data=file_1,file_name='music.wav',mime='audio/wav')
             else:
